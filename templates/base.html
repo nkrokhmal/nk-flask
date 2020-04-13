@@ -6,7 +6,7 @@
     <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}"
     type="image/x-icon">
 {% endblock %}
-{% block title %}Flasky{% endblock %}
+{% block title %}AlisaProject{% endblock %}
 {% block navbar %}
 <div class="navbar navbar-inverse" role="navigation">
     <div class="container">
@@ -22,14 +22,21 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="/">Home</a></li>
+                <li><a href="/model">Model</a></li>
             </ul>
         </div>
     </div>
 </div>
 {% endblock %}
+
 {% block content %}
-    <div class="container">
-        {% block page_content %}{% endblock %}
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
     </div>
+    {% endfor %}
+    {% block page_content %}{% endblock %}
+</div>
 {% endblock %}
