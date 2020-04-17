@@ -6,7 +6,7 @@
 
 <div class="form form-vertical" role="form", method="POST">
     <h1>Please, load your model.</h1>
-    <form method="POST" action="/model" enctype="multipart/form-data">
+    <form method="POST" action="/modelfield" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         {{ wtf.form_field(form.input_file) }}
         {{ wtf.form_field(form.dx) }}
@@ -17,5 +17,4 @@
   <h1>Pressure distribution</h1>
   <img src="data:image/PNG;base64,{{figure}}" width = "400", height = "400">
 </div>
-
 {% endblock %}

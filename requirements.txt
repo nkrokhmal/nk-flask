@@ -1,0 +1,15 @@
+asn1crypto==0.24.0
+Flask==1.1.2
+Flask-Bootstrap==3.3.7.1
+Flask-WTF==0.14.3
+Jinja2==2.11.1
+matplotlib==3.2.1
+numpy==1.18.2
+oauth==1.0.1
+pandas==1.0.3
+Pillow==7.1.1
+PyYAML==3.12
+requests==2.18.4
+scipy==1.4.1
+urllib3==1.22
+WTForms==2.2.1

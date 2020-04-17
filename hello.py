@@ -2,23 +2,23 @@ from flask import Flask, request, make_response, redirect, abort, render_templat
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, FloatField,  SubmitField
+from wtforms import StringField, FloatField, SubmitField
 from wtforms.validators import Required
 from programs.model import *
 from io import BytesIO
+import os
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'Alisa=Dyrinda'
+app.config['SECRET_KEY'] = 'Alisa'
 bootstrap = Bootstrap(app)
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///' + os.path.join(basedir, 'data.postgresql')
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 
-# moment = Moment(app)
+db = SQLAlchemy(app)
 
-# class NameForm(Form):
-#     def __init__(self, question, *args, **kwargs):
-#         Form.__init__(self, *args, **kwargs)
-#         self.name = StringField(question, validators=[Required()])
-#         self.submit = SubmitField('Submit')
 
 class NameForm(FlaskForm):
     name = StringField('What is your name?', validators=[Required()])
@@ -38,7 +38,15 @@ class UploadForm(FlaskForm):
     ]
 
     input_file = FileField('', validators=validators)
-    dx = FloatField("Enter value dx: ", validators=[Required()])
+    dx = FloatField("Enter value dx, m: ", validators=[Required()])
+    submit = SubmitField(label="Submit")
+
+
+class ScattererForm(FlaskForm):
+    radius = FloatField("Enter value radius, mm", validators=[Required()])
+    longitudinal = FloatField("Enter longitudinal speed of sound, m/s", validators=[Required()])
+    transverse = FloatField("Enter transverse speed of sound, m/s", validators=[Required()])
+    density = FloatField("Enter density of scatterer, kg/m^3", validators=[Required()])
     submit = SubmitField(label="Submit")
 
 
@@ -48,22 +56,8 @@ def index():
     return '<p>Your browser is %s</p>' % user_agent
 
 
-@app.route('/cookie')
-def cookie():
-    response = make_response('<h1>This document carries a cookie!</h1>')
-    response.set_cookie('answer', 42)
-    return response
-
-
-@app.route('/username/<user>')
-def user_error(username):
-    if not username:
-        abort(404)
-    return '<h1>Hello, %s</h1>' % username
-
-
-@app.route("/model", methods=['GET', 'POST'])
-def model():
+@app.route("/modelfield", methods=['GET', 'POST'])
+def modelfield():
     form = UploadForm()
     figure = None
     if request.method == 'POST' and form.validate_on_submit():
@@ -72,7 +66,6 @@ def model():
 
         if file is not None:
             figure = show_model(file, session['dx'])
-            print(figure)
 
         form.dx.data = None
         form.input_file.data = None
@@ -117,6 +110,13 @@ def user():
                            image=session.get('image'))
 
 
+@app.route("/scatterer", methods=['GET', 'POST'])
+def scatterer():
+    form = ScattererForm()
+    return render_template('scatterer.html', form=form)
+
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -128,4 +128,4 @@ def internal_server_error(e):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=5000, debug=True, threaded=True, host='0.0.0.0')

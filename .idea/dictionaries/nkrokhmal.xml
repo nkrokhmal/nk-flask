@@ -2,6 +2,9 @@
   <dictionary name="nkrokhmal">
     <words>
       <w>curname</w>
+      <w>postgresql</w>
+      <w>sqlalchemy</w>
+      <w>tablename</w>
     </words>
   </dictionary>
 </component>

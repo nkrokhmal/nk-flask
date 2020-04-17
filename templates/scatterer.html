@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %} RFC {% endblock %}
+{% block page_content %}
+
+<div class="form form-vertical" role="form", method="POST">
+    <h1>Enter spherical scatterer parameters.</h1>
+    <form method="GET" action="/scatterer" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ wtf.form_field(form.radius) }}
+        {{ wtf.form_field(form.longitudinal) }}
+        {{ wtf.form_field(form.transverse) }}
+        {{ wtf.form_field(form.density) }}
+    </form>
+</div>
+
+{% endblock %}
