@@ -7,17 +7,25 @@ from wtforms.validators import Required
 from programs.model import *
 from io import BytesIO
 import os
-from flask_sqlalchemy import SQLAlchemy
+import requests
+import json
+from flask_cors import CORS
+
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+
+host_prod = 'http://flask-backend:6666'
+#host_prod = 'http://35.228.186.127'
+host_prod = 'http://0.0.0.0:8080'
 
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = 'Alisa'
 bootstrap = Bootstrap(app)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///' + os.path.join(basedir, 'data.postgresql')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-
-db = SQLAlchemy(app)
 
 
 class NameForm(FlaskForm):
@@ -38,6 +46,7 @@ class UploadForm(FlaskForm):
     ]
 
     input_file = FileField('', validators=validators)
+    model_name = StringField("Enter model name:", validators=[Required()])
     dx = FloatField("Enter value dx, m: ", validators=[Required()])
     submit = SubmitField(label="Submit")
 
@@ -50,29 +59,47 @@ class ScattererForm(FlaskForm):
     submit = SubmitField(label="Submit")
 
 
-@app.route('/')
-def index():
-    user_agent = request.headers.get('User-Agent')
-    return '<p>Your browser is %s</p>' % user_agent
+@app.route("/models", methods=['GET', 'POST', 'PUT', 'DELETE'])
+def models():
+    data = requests.get(host_prod + '/api/models/').json()
+    return render_template('models.html', data=json.loads(data), host=host_prod)
 
 
-@app.route("/modelfield", methods=['GET', 'POST'])
+@app.route("/loadmodel", methods=['GET', 'POST'])
 def modelfield():
     form = UploadForm()
     figure = None
     if request.method == 'POST' and form.validate_on_submit():
-        file = BytesIO(request.files['input_file'].read())
+        file_bytes = request.files['input_file'].read()
         session['dx'] = form.dx.data
+        session['model_name'] = form.model_name.data
 
-        if file is not None:
-            figure = show_model(file, session['dx'])
+        if len(file_bytes) > 0:
+            figure = show_model(BytesIO(file_bytes), session['dx'])
 
+        url = host_prod + '/api/savemodel/'
+        headers = {
+            'cache-control': "no-cache",
+        }
+        data = {
+            'ModelName': session['model_name'],
+            'Parameters': json.dumps({'dx': session['dx']}),
+        }
+        files = {
+            'ModelFile': file_bytes,
+            'DistributionFile': base64.b64decode(figure)
+        }
+        r = requests.post(url, headers=headers, data=data, files=files)
+        request.files = None
         form.dx.data = None
         form.input_file.data = None
+        form.model_name.data = None
     else:
         flash_errors(form)
-
-    return render_template('model.html', form=form, figure=figure)
+        form.dx.data = None
+        form.input_file.data = None
+        form.model_name.data = None
+    return render_template('loadmodel.html', form=form, figure=figure)
 
 
 def flash_errors(form):
@@ -85,7 +112,7 @@ def flash_errors(form):
             ), 'error')
 
 
-@app.route("/user", methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST'])
 def user():
     form = NameForm()
     im_form = ImageForm()
