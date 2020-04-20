@@ -47,7 +47,7 @@ class UploadForm(FlaskForm):
 
     input_file = FileField('', validators=validators)
     model_name = StringField("Enter model name:", validators=[Required()])
-    dx = FloatField("Enter value dx, m: ", validators=[Required()])
+    dxvalue = FloatField("Enter value dx, m: ", validators=[Required()])
     submit = SubmitField(label="Submit")
 
 
@@ -71,7 +71,7 @@ def modelfield():
     figure = None
     if request.method == 'POST' and form.validate_on_submit():
         file_bytes = request.files['input_file'].read()
-        session['dx'] = form.dx.data
+        session['dx'] = form.dxvalue.data
         session['model_name'] = form.model_name.data
 
         if len(file_bytes) > 0:
@@ -90,15 +90,18 @@ def modelfield():
             'DistributionFile': base64.b64decode(figure)
         }
         r = requests.post(url, headers=headers, data=data, files=files)
-        request.files = None
-        form.dx.data = None
-        form.input_file.data = None
-        form.model_name.data = None
+        if r.status_code != 200:
+            flash_errors(r.content)
+        else:
+            flash('Model {}  successfully loaded!'.format(session['model_name']), 'info')
     else:
         flash_errors(form)
-        form.dx.data = None
-        form.input_file.data = None
-        form.model_name.data = None
+
+    request.files = None
+    form.dxvalue.data = None
+    form.input_file.data = None
+    form.model_name.data = None
+
     return render_template('loadmodel.html', form=form, figure=figure)
 
 
@@ -113,28 +116,8 @@ def flash_errors(form):
 
 
 @app.route("/", methods=['GET', 'POST'])
-def user():
-    form = NameForm()
-    im_form = ImageForm()
-    if form.validate_on_submit():
-        old_name = session.get('name')
-        old_curname = session.get('curname')
-        if old_name is not None and old_name != form.name.data:
-            flash('Looks like you have changed your name!')
-        if old_curname is not None and old_curname != form.curname.data:
-            flash('Looks like you have changed your curname!')
-        session['name'] = form.name.data
-        session['curname'] = form.curname.data
-        form.name.data = ''
-        form.curname.data = ''
-        return redirect(url_for('user'))
-    if im_form.validate_on_submit():
-        session['image'] = im_form.url.data
-        im_form.url.data = ''
-
-    return render_template('user.html', form=form, im_form=im_form,
-                           name=session.get('name'), curname=session.get('curname'),
-                           image=session.get('image'))
+def home():
+    return render_template('home.html')
 
 
 @app.route("/scatterer", methods=['GET', 'POST'])

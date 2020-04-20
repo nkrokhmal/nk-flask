@@ -15,13 +15,12 @@
     <form method="POST" action="/loadmodel" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         {{ wtf.form_field(form.input_file) }}
-        {{ wtf.form_field(form.dx) }}
+        {{ wtf.form_field(form.dxvalue) }}
         {{ wtf.form_field(form.model_name) }}
         {{ wtf.form_field(form.submit) }}
     </form>
 </div>
-<object data="data:image/PNG;base64,{{figure}}"  type="image/png" width = "400", height = "400">
-    <canvas id="canvas" height='150' width='350'></canvas>
+<object data="data:image/PNG;base64,{{figure}}"  type="image/png" width = "400", height = "400"><canvas id="canvas" height='150' width='350'></canvas>
     <style>
       html,
       #canvas {
