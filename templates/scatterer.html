@@ -6,13 +6,59 @@
 
 <div class="form form-vertical" role="form", method="POST">
     <h1>Enter spherical scatterer parameters.</h1>
-    <form method="GET" action="/scatterer" enctype="multipart/form-data">
+    <form method="POST" action="/scatterer" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-        {{ wtf.form_field(form.radius) }}
-        {{ wtf.form_field(form.longitudinal) }}
-        {{ wtf.form_field(form.transverse) }}
-        {{ wtf.form_field(form.density) }}
+        <big> <strong> Object parameters </strong></big>
+        <br>
+        <br>
+        <div class="row">
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.radius, class='form-control', placeholder='Radius') }}
+            </div>
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.longitudinal, class='form-control', placeholder='Longitudinal') }}
+            </div>
+             <div class="form-group col-md-6">
+                {{ wtf.form_field(form.transverse, class='form-control', placeholder='Transverse') }}
+            </div>
+             <div class="form-group col-md-6">
+                {{ wtf.form_field(form.density_of_scatter, class='form-control', placeholder='Density of scatter') }}
+            </div>
+        </div>
+        <big> <strong> Wave parameters </strong></big>
+        <br>
+        <br>
+        <div class="row" >
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.frequency, class='form-control', placeholder='Frequency') }}
+            </div>
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.speed_of_sound, class='form-control', placeholder='Speed of sound') }}
+            </div>
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.density_of_medium, class='form-control', placeholder='Density of medium') }}
+            </div>
+        </div>
+        <big> <strong> Coordinate parameters </strong></big>
+        <br>
+        <br>
+        <div class="row" >
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.type_value, class='form-control', placeholder='Type') }}
+            </div>
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.to_value, class='form-control', placeholder='To') }}
+            </div>
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.step, class='form-control', placeholder='Step') }}
+            </div>
+        </div>
+        {{ wtf.form_field(form.submit) }}
     </form>
 </div>
+<div class="scatterer-image">
+    <img src="data:image/jpeg;base64,{{figure}}" width = "1200", height = "600">
+</div>
+
 
 {% endblock %}

@@ -14,7 +14,7 @@ from flask_cors import CORS
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
-host_prod = 'http://flask-backend:6666'
+#host_prod = 'http://flask-backend:6666'
 #host_prod = 'http://35.228.186.127'
 host_prod = 'http://0.0.0.0:8080'
 
@@ -52,10 +52,17 @@ class UploadForm(FlaskForm):
 
 
 class ScattererForm(FlaskForm):
-    radius = FloatField("Enter value radius, mm", validators=[Required()])
-    longitudinal = FloatField("Enter longitudinal speed of sound, m/s", validators=[Required()])
-    transverse = FloatField("Enter transverse speed of sound, m/s", validators=[Required()])
-    density = FloatField("Enter density of scatterer, kg/m^3", validators=[Required()])
+    radius = FloatField("Enter value radius, mm", default=0.0001)
+    longitudinal = FloatField("Enter longitudinal speed of sound, m/s", default=2620.0)
+    transverse = FloatField("Enter transverse speed of sound, m/s", default=1080.0)
+    density_of_scatter = FloatField("Enter density of scatterer, kg/m^3", default=1125.0)
+    frequency = FloatField("Enter value of frequency", default=1000000)
+    speed_of_sound = FloatField("Enter value of frequency", default=1500.0)
+    density_of_medium = FloatField("Enter density of medium", default=1000.0)
+    type_value = StringField("Enter type of coordinates (X, Y or Z)", default='Z')
+    from_value = FloatField("Enter begin coordinate value", default=-0.02)
+    to_value = FloatField("Enter end coordinate value", default=0.02)
+    step = FloatField("Enter step value", default=0.001)
     submit = SubmitField(label="Submit")
 
 
@@ -63,6 +70,73 @@ class ScattererForm(FlaskForm):
 def models():
     data = requests.get(host_prod + '/api/models/').json()
     return render_template('models.html', data=json.loads(data), host=host_prod)
+
+
+@app.route("/scatterer", methods=['GET', 'POST'])
+def scatterer():
+    form = ScattererForm()
+    figure = None
+    if request.method == 'POST' and form.validate_on_submit():
+        session['Radius'] = form.radius.data
+        session['LongitudinalSpeed'] = form.longitudinal.data
+        session['TransverseSpeed'] = form.transverse.data
+        session['DensityOfScatterer'] = form.density_of_scatter.data
+        session['Frequency'] = form.frequency.data
+        session['SpeedOfSound'] = form.speed_of_sound.data
+        session['DensityOfMedium'] = form.density_of_medium.data
+        session['Type'] = form.type_value.data
+        session['From'] = form.from_value.data
+        session['To'] = form.to_value.data
+        session['Step'] = form.step.data
+        session['ModelPath'] = 'models/next.mat'
+        session['ModelName'] = 'next.mat'
+
+        '''to do: improve'''
+        session['Dx'] = 0.00025
+        session['ModelPath'] = 'models/next.mat'
+        session['ModelName'] = 'next.mat'
+        url = host_prod + '/api/scatterer/'
+        headers = {
+            'cache-control': "no-cache",
+        }
+        data = {
+            'Radius': session['Radius'],
+            'LongitudinalSpeed': session['LongitudinalSpeed'],
+            'TransverseSpeed': session['TransverseSpeed'],
+            'DensityOfScatterer': session['DensityOfScatterer'],
+            'Frequency': session['Frequency'],
+            'SpeedOfSound': session['SpeedOfSound'],
+            'DensityOfMedium': session['DensityOfMedium'],
+            'Dx': session['Dx'],
+            'Type': session['Type'],
+            'From': session['From'],
+            'To': session['To'],
+            'Step': session['Step'],
+            'ModelPath': session['ModelPath'],
+            'ModelName': session['ModelName']
+        }
+        r = requests.post(url, headers=headers, data=data)
+        if r.status_code != 200:
+            flash_errors(r.content)
+        else:
+            figure = r.content.decode('ascii').replace('"', '')
+
+        print(figure)
+
+        form.radius.data = None
+        form.longitudinal.data = None
+        form.transverse.data = None
+        form.density_of_scatter.data = None
+        form.frequency.data = None
+        form.speed_of_sound.data = None
+        form.density_of_medium.data = None
+        form.type_value.data = None
+        form.from_value.data = None
+        form.to_value.data = None
+        form.step.data = None
+
+    return render_template('scatterer.html', form=form, figure=figure)
+
 
 
 @app.route("/loadmodel", methods=['GET', 'POST'])
@@ -76,6 +150,7 @@ def modelfield():
 
         if len(file_bytes) > 0:
             figure = show_model(BytesIO(file_bytes), session['dx'])
+            print(figure)
 
         url = host_prod + '/api/savemodel/'
         headers = {
@@ -101,6 +176,7 @@ def modelfield():
     form.dxvalue.data = None
     form.input_file.data = None
     form.model_name.data = None
+    print(figure)
 
     return render_template('loadmodel.html', form=form, figure=figure)
 
@@ -118,13 +194,6 @@ def flash_errors(form):
 @app.route("/", methods=['GET', 'POST'])
 def home():
     return render_template('home.html')
-
-
-@app.route("/scatterer", methods=['GET', 'POST'])
-def scatterer():
-    form = ScattererForm()
-    return render_template('scatterer.html', form=form)
-
 
 
 @app.errorhandler(404)
