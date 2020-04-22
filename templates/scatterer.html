@@ -56,9 +56,10 @@
         {{ wtf.form_field(form.submit) }}
     </form>
 </div>
-<div class="scatterer-image">
-    <img src="data:image/jpeg;base64,{{figure}}" width = "1200", height = "600">
-</div>
+<object data="data:image/PNG;base64,{{figure}}"  type="image/png" width = "1200", height = "600">
+    <canvas id="canvas" height='150' width='350'></canvas>
+</object>
+
 
 
 {% endblock %}
