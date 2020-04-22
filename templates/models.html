@@ -262,11 +262,11 @@ $(document).ready(function(){
 
 <script type="text/javascript">
 $(function(){
-	$(".btn.btn-danger.btn-ok").click(function(){
+	$(".delete-model").click(function(){
 		var id = $(this).attr("id");
 		var url = $(this).attr("host")
 		console.log(id)
-		console.log(url)
+		console.log(url + '/api/model/' + id)
 		$.ajax(
 		{
 		  	url: url + '/api/model/' + id,
@@ -322,7 +322,7 @@ $(function(){
 											cloud_download
 										</i>
 									</a>
-                                    <a href="#deleteModel" class="delete-model" data-toggle="modal">
+                                    <a href="#deleteModel" class="delete-model" data-toggle="modal" id={{d["id"]}} host={{host}}>
 										<i class="material-icons" data-toggle="tooltip" style="color:red" title="Delete">
 											&#xE872;
 										</i>
@@ -341,7 +341,7 @@ $(function(){
 													</div>
 													<div class="modal-footer">
 														<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
-														<input type="submit" class="btn btn-danger btn-ok" id={{d["id"]}} host={{host}} value= Delete>
+														<input type="submit" class="btn btn-danger btn-ok"  value= Delete>
 													</div>
 												</form>
 											</div>

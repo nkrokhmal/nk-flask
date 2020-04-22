@@ -8,6 +8,11 @@
     <h1>Enter spherical scatterer parameters.</h1>
     <form method="POST" action="/scatterer" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
+        <div class="row">
+            <div class="form-group col-md-12">
+              {{ wtf.form_field(form.model_names_list, class='form-control', placeholder='Choose') }}
+            </div>
+        </div>
         <big> <strong> Object parameters </strong></big>
         <br>
         <br>
@@ -45,6 +50,9 @@
         <div class="row" >
             <div class="form-group col-md-6">
                 {{ wtf.form_field(form.type_value, class='form-control', placeholder='Type') }}
+            </div>
+            <div class="form-group col-md-6">
+                {{ wtf.form_field(form.from_value, class='form-control', placeholder='To') }}
             </div>
             <div class="form-group col-md-6">
                 {{ wtf.form_field(form.to_value, class='form-control', placeholder='To') }}

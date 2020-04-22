@@ -2,8 +2,9 @@ from flask import Flask, request, make_response, redirect, abort, render_templat
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, FloatField, SubmitField
-from wtforms.validators import Required
+from wtforms import StringField, FloatField, SubmitField, SelectField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
+from wtforms.validators import Required, InputRequired
 from programs.model import *
 from io import BytesIO
 import os
@@ -14,12 +15,13 @@ from flask_cors import CORS
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
-#host_prod = 'http://flask-backend:6666'
+host_prod = 'http://flask-backend:8818'
 #host_prod = 'http://35.228.186.127'
-host_prod = 'http://0.0.0.0:8080'
+#host_prod = 'http://0.0.0.0:8818'
 
 app = Flask(__name__)
 CORS(app)
+
 app.config['SECRET_KEY'] = 'Alisa'
 bootstrap = Bootstrap(app)
 
@@ -52,6 +54,7 @@ class UploadForm(FlaskForm):
 
 
 class ScattererForm(FlaskForm):
+    model_names_list = SelectField('Field name',  coerce=int, validators=[InputRequired()])
     radius = FloatField("Enter value radius, mm", default=0.0001)
     longitudinal = FloatField("Enter longitudinal speed of sound, m/s", default=2620.0)
     transverse = FloatField("Enter transverse speed of sound, m/s", default=1080.0)
@@ -69,14 +72,19 @@ class ScattererForm(FlaskForm):
 @app.route("/models", methods=['GET', 'POST', 'PUT', 'DELETE'])
 def models():
     data = requests.get(host_prod + '/api/models/').json()
+    print(data)
     return render_template('models.html', data=json.loads(data), host=host_prod)
 
 
 @app.route("/scatterer", methods=['GET', 'POST'])
 def scatterer():
     form = ScattererForm()
+    data = requests.get(host_prod + '/api/models/').json()
+    data = json.loads(data)
+    form.model_names_list.choices = [(i, m['model_name']) for i, m in enumerate(data)]
     figure = None
     if request.method == 'POST' and form.validate_on_submit():
+        model_info = data[form.model_names_list.data]
         session['Radius'] = form.radius.data
         session['LongitudinalSpeed'] = form.longitudinal.data
         session['TransverseSpeed'] = form.transverse.data
@@ -88,13 +96,9 @@ def scatterer():
         session['From'] = form.from_value.data
         session['To'] = form.to_value.data
         session['Step'] = form.step.data
-        session['ModelPath'] = 'models/next.mat'
-        session['ModelName'] = 'next.mat'
-
-        '''to do: improve'''
         session['Dx'] = 0.00025
-        session['ModelPath'] = 'models/next.mat'
-        session['ModelName'] = 'next.mat'
+        session['ModelPath'] = 'models/{}.mat'.format(model_info['model_name'])
+        session['ModelName'] = model_info['id']
         url = host_prod + '/api/scatterer/'
         headers = {
             'cache-control': "no-cache",
@@ -117,7 +121,7 @@ def scatterer():
         }
         r = requests.post(url, headers=headers, data=data)
         if r.status_code != 200:
-            flash_errors(r.content)
+            flash_errors(form)
         else:
             figure = r.content.decode('ascii').replace('"', '')
 
@@ -135,7 +139,7 @@ def scatterer():
         form.to_value.data = None
         form.step.data = None
 
-    return render_template('scatterer.html', form=form, figure=figure)
+    return render_template('scatterer.html', form=form, figure=figure, data=data)
 
 
 
